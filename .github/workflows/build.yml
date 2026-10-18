@@ -1,0 +1,27 @@
+# Free cloud build (GitHub Actions). Push this folder to a GitHub repo, open the Actions tab,
+# run "Build desktop apps", then download the artifacts. No paid accounts or certificates needed.
+name: Build desktop apps
+on: [workflow_dispatch]
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci || npm install
+      - run: npm test
+      - run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with: { name: TaZ-IPTV-windows, path: "dist/*.exe" }
+  macos:   # untested - first run may need small tweaks
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci || npm install
+      - run: npm run dist:mac
+        env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }
+      - uses: actions/upload-artifact@v4
+        with: { name: TaZ-IPTV-mac, path: "dist/*.dmg" }
