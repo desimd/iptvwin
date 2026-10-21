@@ -1,7 +1,15 @@
-# Free cloud build (GitHub Actions). Push this folder to a GitHub repo, open the Actions tab,
-# run "Build desktop apps", then download the artifacts. No paid accounts or certificates needed.
+# Free cloud build (GitHub Actions).
+#  - Push a version tag (e.g. v1.1.0) and the .exe / .dmg files are built and attached to a GitHub Release automatically.
+#  - Or run it by hand from the Actions tab ("Build desktop apps" > Run workflow): the files come as downloadable artifacts only.
 name: Build desktop apps
-on: [workflow_dispatch]
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to attach files to a release
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -14,6 +22,13 @@ jobs:
       - run: npm run dist
       - uses: actions/upload-artifact@v4
         with: { name: TaZ-IPTV-windows, path: "dist/*.exe" }
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          generate_release_notes: true
+
   macos:   # untested - first run may need small tweaks
     runs-on: macos-latest
     steps:
@@ -25,3 +40,9 @@ jobs:
         env: { CSC_IDENTITY_AUTO_DISCOVERY: "false" }
       - uses: actions/upload-artifact@v4
         with: { name: TaZ-IPTV-mac, path: "dist/*.dmg" }
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg
+          generate_release_notes: true
